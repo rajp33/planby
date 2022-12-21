@@ -1,4 +1,4 @@
-import React from "react";
+import React, { RefObject, useImperativeHandle, useRef } from "react";
 
 // Import types
 import {
@@ -61,10 +61,21 @@ interface LayoutProps {
   renderTimeline?: (v: RenderTimeline) => React.ReactNode;
 }
 
+export interface RefHandler {
+  scrollBoxRef: RefObject<HTMLDivElement>;
+  contentRef: RefObject<HTMLDivElement>;
+  channelsRef: RefObject<HTMLDivElement>;
+  lineRef: RefObject<HTMLDivElement>;
+}
+
 const { ScrollBox, Content } = EpgStyled;
 
-export const Layout = React.forwardRef<HTMLDivElement, LayoutProps>(
-  (props, scrollBoxRef) => {
+export const Layout = React.forwardRef<RefHandler | undefined, LayoutProps>(
+  (props, refs) => {
+    const scrollBoxRef = useRef<HTMLDivElement>(null);
+    const contentRef = useRef<HTMLDivElement>(null);
+    const channelsRef = useRef<HTMLDivElement>(null);
+    const lineRef = useRef<HTMLDivElement>(null);
     const { channels, programs, startDate, endDate, scrollY } = props;
     const { dayWidth, hourWidth, sidebarWidth, itemHeight } = props;
     const { numberOfHoursInDay, offsetStartHoursRange } = props;
@@ -91,6 +102,14 @@ export const Layout = React.forwardRef<HTMLDivElement, LayoutProps>(
       itemHeight,
     ]);
     const isFuture = isFutureTime(endDate);
+
+    useImperativeHandle(refs, () => ({
+        scrollBoxRef,
+        contentRef,
+        channelsRef,
+        lineRef,
+      }), [contentRef, scrollBoxRef, channelsRef, lineRef]
+    );
 
     const renderPrograms = (program: ProgramWithPosition) => {
       const { position } = program;
@@ -161,6 +180,7 @@ export const Layout = React.forwardRef<HTMLDivElement, LayoutProps>(
           />
         )}
         <Content
+          ref={contentRef}
           data-testid="content"
           sidebarWidth={sidebarWidth}
           isSidebar={isSidebar}
